@@ -27,8 +27,61 @@ from random import choice
 from board import Board
 from element import Element
 from direction import Direction
-import src.main.python.direction as direct
+#import src.main.python.direction as direct
 
+
+class State:
+    __operators = []
+
+    def getOperators(self):
+        return State.__operators
+
+    def applicable(self, operator):
+        pass
+
+    def applay(self, operator):
+        pass
+
+    def isFinalState(self):
+        pass
+
+    def getMinMaxUtilityScore(self):
+        pass
+
+class BombermanState(State):
+    def __init__(self, board_string):
+        self._board = Board(board_string)
+    
+    def getOperators(self):
+        return State.__operators
+
+    def applicable(self, operator):
+        pass
+
+    def applay(self, operator):
+        pass
+
+    def isFinalState(self):
+        pass
+
+    def getMinMaxUtilityScore(self):
+        pass
+   
+
+class StepProposal:
+    def __init__(self):
+        self._state = None
+        self._deep = 0
+        self._step = None
+        self._utilityscore = 0
+        self._evaluated = 1
+
+
+class MinMax(StepProposal):
+    def __init__(self, state, deep):
+        self._deep = deep
+        self._state = state
+        
 
 class DirectionSolver:
     """ This class should contain the movement generation algorythm."""
@@ -42,6 +95,7 @@ class DirectionSolver:
     def get(self, board_string):
         """ The function that should be implemented."""
         self._board = Board(board_string)
+        self._test = BombermanState(board_string=board_string)
         _command = self.find_direction()
         print("Sending Command {}".format(_command))
 
