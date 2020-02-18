@@ -31,26 +31,26 @@ from point import Point
 #from com.codenjoy.dojo import bomberman
 #import src.main.python.direction as direct
 import sys
-
+from compose import state
+from builtins import len
+from _ast import Or
+  
 
 class State:
     operators = []
+    
+    def __init__(self,state,parrent=None,operator=None,deep=0):
+        self._state=state
+        self._parrent = parrent
+        self._operator = operator
+        self._deep = deep+1
+        self._operators = set()
 
-    def __init__(self):
-        self._state=None
-    
-    def __init__(self,state):
-        self._state=state
-        self._operator=None
-    
-    def __init__(self,state,op):
-        self._state=state
-        self._operator=op
 
     def getOperators(self):
-        return State.operators
-
-    def applicable(self, operator):
+        return self._operators
+    
+    def isApplicable(self, operator):
         pass
 
     def apply(self, operator):
@@ -65,57 +65,62 @@ class State:
     def getOperator(self):
         return self._operator
 
-class BombermanState(State):
-    State.operators=[
-        Direction('RIGHT'),
-        Direction('LEFT'),
-        Direction('UP'),
-        Direction('DOWN'),
-        Direction('ACT'),
-        Direction("NULL")
-    ]
-    def __init__(self, board_string,bomberman):
-        super().__init__(Board(board_string),None)
-        self._board_string=board_string
-        self._bomberman = bomberman
+    def __eq__(self, otherElement):
+        return isinstance(otherElement,State) and (self._state == otherElement._state and
+                self._parrent == otherElement._parrent and
+                self._operator == otherElement._operator and
+                self.deep == otherElement._deep and
+                self._operators == otherElement._operators
+                )
+    def __str__(self):
+        pass
     
-    def __init__(self, board_string,bomberman,op):
-        super().__init__(Board(board_string),op)
-        self._board_string=board_string
-        self._bomberman = bomberman
+class BombermanState(State):
+    State.operators.append(Direction('RIGHT'))
+    State.operators.append(Direction('LEFT'))
+    State.operators.append(Direction('UP'))
+    State.operators.append(Direction('DOWN'))
+    State.operators.append(Direction('ACT'))
+    State.operators.append(Direction("NULL"))
+  
+    def __init__(self, board_string,bomberman):
+        super().__init__(state,None)
+        self._bomberman = self._state.get_bomberman()
+        for op in State.operators:
+            if op not in self._operators and self.isApplicable(op):
+               self._operators.append(op) 
+    
+    def __init__(self,state=state,parrent=None,operator=None,deep=0):
+        super().__init__(state,parrent=parrent,operator=operator)       
+        if operator is None:
+            self._bomberman = self._state.get_bomberman()
+        else:
+            self._bomberman = Point(operator.change_x(bomberman.get_x()),operator.change_y(bomberman.get_y()))
     
         
     def getOperators(self):
-        return State.operators
+        return [op for op in (State.operators) if self.isApplicable(op)]
 
     def isApplicable(self, operator):
-        _no_go = self._state.get_barriers()+self._state.get_meat_choppers()
-     
-        if operator == Direction("NULL") and self._state.is_my_bomberman_dead():
+        if (operator == Direction('ACT') and 
+            (self._state.is_near(self._bomberman.get_x(),self._bomberman.get_y(),Element("OTHER_BOMBERMAN"))
+             or
+             self._state.is_near(self._bomberman.get_x(),self._bomberman.get_y(),Element("DESTROY_WALL"))
+             or self._state.is_near(self._bomberman.get_x(),self._bomberman.get_y(),Element("MEAT_CHOPPER"))
+            )
+            ):
             return True
-        elif (operator not in [ Direction("NULL")] and
-            Point(operator.change_x(self._bomberman.get_x()), operator.change_y(self._bomberman.get_y())) not in _no_go and
-            self._state.get_at(operator.change_x(self._bomberman.get_x()), operator.change_y(self._bomberman.get_y())).get_char != ' '
-            and not self._state.is_my_bomberman_dead()):
-            print("ME")
+        elif operator in [ Direction('NULL')] and self._state.is_my_bomberman_dead():
             return True
-        
-        elif (
-            (operator == Direction('ACT') and (
-              Point(self._bomberman.get_x(),self._bomberman.get_y()) not in self._state.get_bombs()
-            ) or (
-                4 == self._state.count_near(self._bomberman.get_x(), self._bomberman.get_y(), Element('DESTROY_WALL')) + 
-                self._state.count_near(self._bomberman.get_x(), self._bomberman.get_x(), Element('WALL'))
-                ))
-             and not self._state.is_my_bomberman_dead()):
+        elif  operator == Direction('STOP'):
             return True
-
-        return False
+        return self._state.is_at(operator.change_x(self._bomberman.get_x()),operator.change_y(self._bomberman.get_y()),Element("NONE"))
 
     def apply(self, operator):
-        #if operator != Direction('ACT'):
-        bomberman=Point(operator.change_x(self._bomberman.get_x()),operator.change_y(self._bomberman.get_y()))
-        return BombermanState(self._board_string,bomberman,operator)
+        if operator not in [Direction('ACT'),Direction('NULL')]:
+            bomberman=Point(operator.change_x(self._bomberman.get_x()),operator.change_y(self._bomberman.get_y()))
+            return BombermanState(self._board_string,bomberman,operator)
+        return None
 
     def isFinalState(self):
         return self._state.is_my_bomberman_dead()
@@ -154,6 +159,9 @@ class BombermanState(State):
             if i in self._state.get_bombs():
                 return -500
         return score
+    
+    def __str__(self):
+        return self._state.__str__()
 
 class StepProposal:
     steps = []
@@ -190,7 +198,6 @@ class MinMax(StepProposal):
                     self._evaluated += newMinMax._evaluated
             
 
-    
 class DirectionSolver:
     """ This class should contain the movement generation algorythm."""
 
@@ -203,11 +210,12 @@ class DirectionSolver:
     def get(self, board_string):
         """ The function that should be implemented."""
         self._board = Board(board_string)
-        self._test = BombermanState(board_string=board_string,bomberman=self._board.get_bomberman(),op=None)
-        _testMinMax = MinMax(state=self._test,deep=2)
-        print( _testMinMax.get_step().to_string()+":"+ str(_testMinMax.get_utilityscore()))
-        _command=_testMinMax.get_step().to_string()
-        #_command = self.find_direction()
+        self._test = BombermanState(state=self._board)
+        print(">>".join([s.__str__() for s in (self._test.getOperators())]))
+        #_testMinMax = MinMax(state=self._test,deep=2)
+        #print( _testMinMax.get_step().to_string()+":"+ str(_testMinMax.get_utilityscore()))
+        #_command=_testMinMax.get_step().to_string()
+        _command = self.find_direction()
         #_command=Direction("STOP").to_string()
         print("Sending Command {}".format(_command))
 

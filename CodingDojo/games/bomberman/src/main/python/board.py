@@ -118,8 +118,10 @@ class Board:
         _points = set()
         for _bomb in _bombs:
             _bx, _by = _bomb.get_x(), _bomb.get_y()
-            _points.update(_bomb)
-            _points.update([Point(x, y) for x, y in ((_bx + 1, _by),
+            #_points.update(_bomb)
+            _points.update([Point(x, y) for x, y in (
+                                                    ( _bx, _by ),
+                                                     (_bx + 1, _by),
                                                      (_bx - 1, _by),
                                                      (_bx, _by + 1),
                                                      (_bx, _by - 1))])
@@ -157,6 +159,8 @@ class Board:
                                           bls=self.get_blasts(),
                                           ebl=self.get_future_blasts())
         )
+    def __str__(self):
+        return self.to_string()
 
     def _line_by_line(self):
         return '\n'.join([self._string[i:i + self._size]
@@ -170,7 +174,13 @@ class Board:
 
     def _xy2strpos(self, x, y):
         return self._size * y + x
-
+    
+    def __eq__(self, other):
+        return ( isinstance(other,Board) and
+            self._string ==  other._string and
+            self._len == other._len and
+            self._size == other._size 
+            )
 
 if __name__ == '__main__':
     raise RuntimeError("This module is not designed to be ran from CLI")
