@@ -75,7 +75,8 @@ class Element:
     def get_char(self):
         """ Return the Element's character."""
         return self._char
-    
+    def __str__(self):
+        return self._char
     def __eq__(self, otherElement):
         return (self._name == otherElement._name and
                 self._char == otherElement._char)
