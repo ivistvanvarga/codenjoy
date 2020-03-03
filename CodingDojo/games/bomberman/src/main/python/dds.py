@@ -31,7 +31,7 @@ from point import Point
 #from com.codenjoy.dojo import bomberman
 #import src.main.python.direction as direct
 import sys
-from prompt_toolkit.auto_suggest import Suggestion
+
 
   
 class StepProposal:
@@ -108,7 +108,14 @@ class TreeSerch(StepProposal):
             self._closed.append(akt)
         return self._terminal
             
-             
+    def get_best(self):
+        self.serch()
+        bestone = self._state
+        for i in self._terminal:
+            if i != bestone and i.getMinMaxUtilityScore() > bestone.getMinMaxUtilityScore():
+                bestone = i
+        return bestone
+                 
             
 
 class BombermanBoard(Board):
@@ -139,7 +146,10 @@ class BombermanBoard(Board):
                         string_remove[self._xy2strpos(x,y)+1:]]))
         else:
             self._bomberman = Point(operator.change_x(bomberman.get_x()),operator.change_y(bomberman.get_y()))
-            string_remove = self._string.replace(self.get_at(bomberman.get_x(),bomberman.get_y()).get_char(), Element('NONE').get_char())
+            if self.is_at(bomberman.get_x(),bomberman.get_y(),Element('BOMB_BOMBERMAN')):
+                string_remove = self._string.replace(self.get_at(bomberman.get_x(),bomberman.get_y()).get_char(), Element('BOOM').get_char())
+            else:  
+                string_remove = self._string.replace(self.get_at(bomberman.get_x(),bomberman.get_y()).get_char(), Element('NONE').get_char())
             x, y = self._bomberman.get_x(),self._bomberman.get_y()
             
             super().__init__(u''.join([string_remove[:self._xy2strpos(x,y)],
@@ -158,11 +168,12 @@ class BombermanBoard(Board):
              self.is_near(self._bomberman.get_x(),self._bomberman.get_y(),Element("DESTROY_WALL"))
              or self.is_near(self._bomberman.get_x(),self._bomberman.get_y(),Element("MEAT_CHOPPER"))
             )
+            and self.get_at(self._bomberman.get_x(),self._bomberman.get_y()) != Element('BOMB_BOMBERMAN')
             ):
             return True
         elif operator in [ Direction('NULL')] and self.is_my_bomberman_dead():
             return True
-        elif  operator == Direction('STOP'):
+        elif  operator == Direction('STOP')  and self.get_at(self._bomberman.get_x(),self._bomberman.get_y()) != Element('BOMB_BOMBERMAN'):
             return True
 
         elif self.get_at(operator.change_x(self._bomberman.get_x()),operator.change_y(self._bomberman.get_y())) == Element('NONE'):
@@ -244,7 +255,7 @@ class DirectionSolver:
         suggestion = Direction('NULL').to_string()
         test = TreeSerch(state=self._board,findAll=True,deep=3).serch()
         print(len(self._board.getOperators()))
-        #test = MinMax(state=self._test,deep=3)
+        #test2 = MinMax(state=self._test,deep=3)
        # print(self._board)
        # print("\n>>".join([s.__str__() for s in (self._board.getOperators())]))
         
