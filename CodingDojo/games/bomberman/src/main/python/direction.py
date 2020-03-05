@@ -45,7 +45,7 @@ class Direction:
             raise ValueError("No Such Direction: {}".format(direction))
         
     def __eq__(self, other):
-        return self._name == other._name and self._dir == other._dir
+        return other is not None and self._name == other._name and self._dir == other._dir
 
     def __ne__(self, other):
         return self._name == other._name and self._dir != other._dir

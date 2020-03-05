@@ -109,10 +109,10 @@ class TreeSerch(StepProposal):
         return self._terminal
             
     def get_best(self):
-        self.serch()
+        
         bestone = self._state
-        for i in self._terminal:
-            if i != bestone and i.getMinMaxUtilityScore() > bestone.getMinMaxUtilityScore():
+        for i in self.serch():
+            if i != bestone and i.getMinMaxUtilityScore() >= bestone.getMinMaxUtilityScore():
                 bestone = i
         return bestone
                  
@@ -168,7 +168,6 @@ class BombermanBoard(Board):
              self.is_near(self._bomberman.get_x(),self._bomberman.get_y(),Element("DESTROY_WALL"))
              or self.is_near(self._bomberman.get_x(),self._bomberman.get_y(),Element("MEAT_CHOPPER"))
             )
-            and self.get_at(self._bomberman.get_x(),self._bomberman.get_y()) != Element('BOMB_BOMBERMAN')
             ):
             return True
         elif operator in [ Direction('NULL')] and self.is_my_bomberman_dead():
@@ -182,32 +181,35 @@ class BombermanBoard(Board):
     
     def getMinMaxUtilityScore(self):
         score = 0    
-        if self._bomberman in self.get_bombs():
-            score-= -500
+        if self._bomberman in self.get_bombs()and self._parrent is None:
+            score-= 500
         try:
-            if len(self.get_future_blasts())>1 and self._bomberman in self.get_future_blasts():
-               score-= -500
+            if len(self.get_future_blasts())>1 and self._bomberman in self.get_future_blasts()and self._parrent is None:
+               return -5000
         except TypeError:
             pass
         finally:
             pass
         if self._bomberman in self.get_meat_choppers():
-            score+=-100
-        surrounding = [
-            Point(Direction('LEFT').change_x(self._bomberman.get_x()),Direction('LEFT').change_y(self._bomberman.get_y())),
-            Point(Direction('RIGHT').change_x(self._bomberman.get_x()),Direction('RIGHT').change_y(self._bomberman.get_y())),
-            Point(Direction('UP').change_x(self._bomberman.get_x()),Direction('UP').change_y(self._bomberman.get_y())),
-            Point(Direction('DOWN').change_x(self._bomberman.get_x()),Direction('DOWN').change_y(self._bomberman.get_y())),
-        ]
-        for i in surrounding:
-            if i in self.get_destroy_walls():
-                score+=100
-            if i in self.get_meat_choppers():
-                score+=200
-            if i in self.get_other_bombermans():
-                score+=1000
-            if i in self.get_bombs():
-                return -500
+            score-= 100
+        if self._operator == Direction('ACT'):
+            surrounding = [
+                Point(Direction('LEFT').change_x(self._bomberman.get_x()),Direction('LEFT').change_y(self._bomberman.get_y())),
+                Point(Direction('RIGHT').change_x(self._bomberman.get_x()),Direction('RIGHT').change_y(self._bomberman.get_y())),
+                Point(Direction('UP').change_x(self._bomberman.get_x()),Direction('UP').change_y(self._bomberman.get_y())),
+                Point(Direction('DOWN').change_x(self._bomberman.get_x()),Direction('DOWN').change_y(self._bomberman.get_y())),
+            ]
+            for i in surrounding:
+                if i in self.get_destroy_walls():
+                    score+=100
+                if i in self.get_meat_choppers():
+                    score+=200
+                if i in self.get_other_bombermans():
+                    score+=1000
+                if i in self.get_bombs():
+                    return -5000
+        if self._parrent is not None:
+            score += self._parrent.getMinMaxUtilityScore()
         return score
     
     def isFinalState(self):
@@ -246,14 +248,15 @@ class DirectionSolver:
         self._board = BombermanBoard(board_string=board_string)
         
         _command = self.find_direction2()
-        #_command=Direction("STOP").to_string()
         print("Sending Command {}".format(_command))
 
         return _command
     
     def find_direction2(self):
         suggestion = Direction('NULL').to_string()
-        test = TreeSerch(state=self._board,findAll=True,deep=3).serch()
+        if self._board.is_my_bomberman_dead():
+            return suggestion
+        suggestion = TreeSerch.getPath(TreeSerch(state=self._board,findAll=True,deep=5).get_best())
         print(len(self._board.getOperators()))
         #test2 = MinMax(state=self._test,deep=3)
        # print(self._board)
@@ -265,12 +268,7 @@ class DirectionSolver:
         #print( _testMinMax.get_step().to_string()+":"+ str(_testMinMax.get_utilityscore()))
         #_command=_testMinMax.get_step().to_string()
         
-        
-        if len(test) == 0 or self._board.is_my_bomberman_dead():
-            return self._board.getOperators().pop().__str__()
-        suggestion = test.pop()
-        print(','.join([s.__str__() for s in (TreeSerch.getPath(suggestion))]))
-        return ','.join([s.__str__() for s in (TreeSerch.getPath(suggestion))])
+        return ','.join([s.__str__() for s in (suggestion)])
 
     def find_direction(self):
         """ This is an example of direction solver subroutine."""
