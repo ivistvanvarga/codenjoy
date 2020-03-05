@@ -34,4 +34,8 @@
 /CodingDojo/portable/windows-cmd/tools/**
 /CodingDojo/games/a2048/src/main/dotNet/A2048/packages/**
 /CodingDojo/games/loderunner/src/main/dotNet/Loderunner/packages/**
+**/.classpath
+**/.project
+**/.pydevproject
+**/.settings
 /CodingDojo/games/bomberman/src/main/dotNet/Bomberman/packages/**

@@ -33,7 +33,8 @@ def main():
     assert version_info[0] == 3, "You should run me with Python 3.x"
 
     # substitute following link with the one you've copied in your browser after registration
-    url = "http://localhost:8080/codenjoy-contest/board/player/0?code=000000000000"
+    #url = "http://localhost:8080/codenjoy-contest/board/player/0?code=000000000000"
+    url = "http://10.6.220.21:8080/codenjoy-contest/board/player/fn7e50n5g48privhueq8?code=7953668078501078730"
 
     repattern = re.compile(
         "^https?://([-a-zA-Z0-9@:%._\+~#=\.]+)/codenjoy-contest/board/player/([a-z0-9]+)\?code=([0-9]+)")

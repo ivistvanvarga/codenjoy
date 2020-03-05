@@ -257,18 +257,11 @@ class DirectionSolver:
         if self._board.is_my_bomberman_dead():
             return suggestion
         suggestion = TreeSerch.getPath(TreeSerch(state=self._board,findAll=True,deep=5).get_best())
-        print(len(self._board.getOperators()))
-        #test2 = MinMax(state=self._test,deep=3)
-       # print(self._board)
-       # print("\n>>".join([s.__str__() for s in (self._board.getOperators())]))
+        #if suggestion[0] == Direction('ACT'):
+        #    return ','.join([s.__str__() for s in (suggestion[:2])])
         
-        #print("Resolutions:"+ str(len(test)))
-        #print(">>".join([s.__str__() for s in (self._board.getOperators())]))
-        #_testMinMax = MinMax(state=self._test,deep=2)
-        #print( _testMinMax.get_step().to_string()+":"+ str(_testMinMax.get_utilityscore()))
-        #_command=_testMinMax.get_step().to_string()
         
-        return ','.join([s.__str__() for s in (suggestion)])
+        return ','.join([s.__str__() for s in (suggestion[:2])])
 
     def find_direction(self):
         """ This is an example of direction solver subroutine."""
